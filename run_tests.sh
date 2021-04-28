@@ -1,4 +1,4 @@
 # Define language specific commands
 python3 -m unittest
-pylint src/
-mypy src/
+pylint rl_flask/
+mypy rl_flask/

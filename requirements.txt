@@ -1,6 +1,6 @@
 Flask==1.0.*
 flask-cors==3.0.*
-mypy==0.8.*
-pylint==2.6.*
+mypy
+pylint
 requests==2.*
 quantum-random

@@ -1,8 +1,11 @@
 """
 Module for utilities.
+To be used by utils_ext_base.py.
 """
+
+from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any
+from typing import Any, Dict, List, Union
 
 import qrandom as qr
 
@@ -10,21 +13,10 @@ import qrandom as qr
 class Action:
     """Base class for actions."""
 
-    def __init__(self, properties: Any = []):
+    def __init__(self, properties: Any = None):
         """Initialize state with a list of properties."""
         self.properties = properties
         self.name = 'Action'
-
-    def __str__(self):
-        """Return space separated string of properties."""
-        x = str(self.properties)
-        if type(self.properties) in [list, tuple]:
-            x = ','.join([str(x) for x in self.properties])
-        return f"{self.name}({x})"
-
-    def __hash__(self) -> int:
-        """Hashes the object."""
-        return hash(self.__str__())
 
     def __eq__(self, other) -> bool:
         """Determines equality."""
@@ -32,19 +24,32 @@ class Action:
             return self.__dict__ == other.__dict__
         return False
 
+    def __hash__(self) -> int:
+        """Hashes the object."""
+        return hash(self.__str__())
 
-class State(Action):
+    def __str__(self):
+        """Return space separated string of properties."""
+        str_properties = str(self.properties)
+        if type(self.properties) in [list, tuple]:
+            str_properties = ','.join([str(property) for property in self.properties])
+        return f"{self.name}({str_properties})"
+
+
+class StateBase(ABC, Action):
     """Base class for states."""
 
-    def __init__(self, properties: Any = (), terminal: bool = False):
+    def __init__(self, properties: Any = None, terminal: bool = False):
         """
         Initialize state with a list of properties and
         bool describing whether or not state is terminal.
         """
         super().__init__(properties)
+        self.properties = properties
         self.terminal = terminal
         self.name = 'State'
 
+    @abstractmethod
     def next(self, action: Action = None):
         """
         Required method for getting next state, possibly given an action.
@@ -54,15 +59,22 @@ class State(Action):
             return self
         return self
 
+    @abstractmethod
+    def reset(self):
+        """Required method for resetting state to original state."""
+        return self
+
+
 class QLearner:
     """Class for Q Learning agent."""
+    table: Dict[StateBase, Dict[Action, Union[float, int]]]
 
     def __init__(
         self,
         learning_rate: float,
         discount_rate: float,
         random_chance: float,
-        table: dict = {}
+        possible_actions: List[Action],
     ):
         """
         Initializes QLearner
@@ -70,6 +82,7 @@ class QLearner:
             learning_rate: float describing learning rate (between 0 and 1).
             discount_rate: float describing discount rate (between 0 and 1).
             discount_rate: float describing chance of taking random action (between 0 and 1).
+            possible_actions: List[Action] describing the list of possible actions.
         Returns:
             QLearner
         """
@@ -81,17 +94,17 @@ class QLearner:
         self.discount_rate = discount_rate
         self.random_chance = random_chance
         # YOUR CODE HERE
-        self.possible_actions = []
+        self.possible_actions = possible_actions
 
         # Table to be of form {<str_state>: {..., <str_action_i>: <reward_i>, ...}}
-        self.table = table
+        self.table = {}
 
-    def _init_state(self, state: State):
+    def _init_state(self, state: StateBase):
         """Initializes a string state in the Q table."""
         if state not in self.table:
             self.table[state] = {a: 0 for a in self.possible_actions}
 
-    def get_action(self, state: State) -> Action:
+    def get_action(self, state: StateBase) -> Action:
         """
         Gets optimal action given a state.
         Args:
@@ -106,7 +119,7 @@ class QLearner:
         self._init_state(state)
         return qr.choice(self.possible_actions)
 
-    def update(self, state: State, action: Action, reward: float = 0):
+    def update(self, state: StateBase, action: Action, reward: float = 0):
         """
         Updates based on Q-Learning paradigm.
         Args:
