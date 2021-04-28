@@ -1,0 +1,40 @@
+name: OnCorps Python library CI checks
+on: [pull_request]
+jobs:
+  ci-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Fetch CI private action
+        uses: actions/checkout@v2
+        with:
+          repository: OnCorps/python-library-ci-action
+          ref: 1.x
+          token: ${{ secrets.ONCORPS_GITHUB_TOKEN }}
+          path: .github/actions/python-library-ci-action
+      - name: Run the CI action
+        id: ci-action
+        uses: ./.github/actions/python-library-ci-action
+        env:
+          GIT_TOKEN: ${{ secrets.ONCORPS_GITHUB_TOKEN }}
+          ONCORPS_GITHUB_TOKEN: ${{ secrets.ONCORPS_GITHUB_TOKEN }}
+  security:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build an image from Dockerfile
+        env:
+          GIT_TOKEN: ${{ secrets.ONCORPS_GITHUB_TOKEN }}
+          ONCORPS_GITHUB_TOKEN: ${{ secrets.ONCORPS_GITHUB_TOKEN }}
+        run: |
+          docker build . --build-arg GIT_TOKEN=${{ secrets.ONCORPS_GITHUB_TOKEN }} --tag this_repo
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: this_repo
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
