@@ -16,6 +16,7 @@ class State(StateBase):
         Should only update the attributes of the class.
         """
         # YOUR CODE HERE
+        self.terminal = kwargs.get('terminal', False)
         prop = action.properties
         if prop == 'nudge':
             self.properties[1] += 1

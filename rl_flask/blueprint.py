@@ -74,11 +74,11 @@ def construct_blueprint(q_learner: QLearner, state: State) -> Blueprint:
         and the reward from the state action pair.
         """
         input_state = request.args.get('state', None)
+        reward = float(request.args.get('reward', 0))
         if input_state is not None:
             action = q_learner.get_action(get_state_from_args(input_state))
-            return str(action)
-        action = get_action_from_args(request.args)
-        reward = float(request.args.get('reward', 0))
+        else:
+            action = get_action_from_args(request.args)
         q_learner.update(state=state, action=action, reward=reward)
         return str(state)
 
