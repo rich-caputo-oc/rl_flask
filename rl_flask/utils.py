@@ -7,8 +7,7 @@ from abc import ABC, abstractmethod
 from copy import deepcopy
 from typing import Any, Dict, List, Union
 
-import qrandom as qr
-
+import numpy as np
 
 class Action:
     """Base class for actions."""
@@ -116,12 +115,12 @@ class QLearner:
         curr_max = max(self.table[state], key=self.table[state].get)
         if table_max:
             return curr_max
-        if qr.random() < self.random_chance:
-            return qr.choice(self.possible_actions)
+        if np.random.random() < self.random_chance:
+            return np.random.choice(self.possible_actions)
         if state in self.table:
             return curr_max
         self._init_state(state)
-        return qr.choice(self.possible_actions)
+        return np.random.choice(self.possible_actions)
 
     def update(self, state: StateBase, action: Action, reward: float = 0, **kwargs):
         """
@@ -186,14 +185,14 @@ class DoubleQLearner(QLearner):
             if table_max == 0:
                 return get_max(self.table_0)
             return get_max(self.table_1)
-        if qr.random() < self.random_chance:
-            return qr.choice(self.possible_actions)
-        if qr.random() < 0.5:
+        if np.random.random() < self.random_chance:
+            return np.random.choice(self.possible_actions)
+        if np.random.random() < 0.5:
             get_max(self.table_0)
         else:
             get_max(self.table_1)
         self._init_state(state)
-        return qr.choice(self.possible_actions)
+        return np.random.choice(self.possible_actions)
 
     def update(self, state: StateBase, action: Action, reward: float = 0, **kwargs):
         """
@@ -206,7 +205,7 @@ class DoubleQLearner(QLearner):
         orig_state = deepcopy(state)
         state.next(action, **kwargs)
         next_state = deepcopy(state)
-        coin = int(qr.random() < 0.5)
+        coin = int(np.random.random() < 0.5)
         if not state.terminal:
             self._init_state(orig_state)
             self._init_state(next_state)
