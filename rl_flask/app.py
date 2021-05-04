@@ -6,16 +6,17 @@ import logging
 
 from flask import Flask
 from blueprint import construct_blueprint
-from utils import QLearner
+from utils import QLearner, DoubleQLearner
 from utils_ext import Action, State
 
 # Change global variables as needed
-LEARNING_RATE = 0.1
+LEARNING_RATE = 0.25
 DISCOUNT_RATE = 0.5
-RANDOM_CHANCE = 0.1
-POSSIBLE_ACTIONS = [Action('message'), Action('no_message')]
+RANDOM_CHANCE = 0.05
+POSSIBLE_ACTIONS = [Action('nudge'), Action('no_nudge')]
 INIT_STATE_PROPERTIES = [0, 0]
 MODEL_FILENAME = "rl_flask/data/q_learner.pkl"
+DOUBLE = True
 
 # Set up logging format
 fmt = logging.Formatter(
@@ -37,13 +38,20 @@ logger.addHandler(fh)
 app = Flask(__name__)
 
 # Initialize QLearner
+
 q_learner = QLearner(
     learning_rate=LEARNING_RATE,
     discount_rate=DISCOUNT_RATE,
     random_chance=RANDOM_CHANCE,
     possible_actions=POSSIBLE_ACTIONS
 )
-
+if DOUBLE:
+    q_learner = DoubleQLearner(
+        learning_rate=LEARNING_RATE,
+        discount_rate=DISCOUNT_RATE,
+        random_chance=RANDOM_CHANCE,
+        possible_actions=POSSIBLE_ACTIONS
+    )
 # Initialize state
 state = State(INIT_STATE_PROPERTIES)
 

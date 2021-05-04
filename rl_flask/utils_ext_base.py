@@ -8,7 +8,7 @@ from utils import Action, StateBase
 class State(StateBase):
     """Class for states."""
 
-    def next(self, action: Action = None):
+    def next(self, action: Action = None, **kwargs):
         """
         Required method for getting next state, possibly given an action.
         Should only update the attributes of the class.
